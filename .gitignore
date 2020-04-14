@@ -19,3 +19,8 @@ doc/api/
 *.js_
 *.js.deps
 *.js.map
+
+# Just in case I don't tidy up after tests
+*.zip
+*.exe
+*.aot
