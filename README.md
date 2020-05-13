@@ -1,20 +1,38 @@
-# SDF-filter
-This is a CLI tool for filtering docking results made by RxDock or similar software.
+# SDF Tools
+
+A collection of CLI tools for editing and filtering docking results made by RxDock or similar software.
 
 ## Build
+
+### Prerequisites
+
+* [dart](https://dart.dev)
+
+For ease of building we have included a script.
+
+To build every tool run:
+
 ```
 cd /path/to/SDF-filter-master
-mkdir build
-pub get
-dart2native bin/main.dart -o build/sdfilter
+./build.sh all 
 ```
 
+Windows users can double click `build.bat` to build all tools or use Command Prompt to launch `build.bat` as described above.
+
+If you only need to build a specific tool (ex. sdfilter) substitute `all` for `<tool name>` (ex. `sdfilter`)
+
 ## Manual
-### Usage
+
+### sdfilter
+
+#### Usage
+
 ```
 sdfilter -i /path/to/input(.sdf) -o /path/to/output.sdf -l/e/g -f <double> [-p <SCORE>]
 ```
-### Options
+
+#### Options
+
 ```
 -i    --input               Input can be file or directory.
                             Absolute path must be specified.
