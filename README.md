@@ -14,10 +14,11 @@ To build every tool run:
 
 ```
 cd /path/to/SDF-filter-master
+pub get
 ./build.sh all 
 ```
 
-Windows users can double click `build.bat` to build all tools or use Command Prompt to launch `build.bat` as described above.
+Windows users must substitute `./build.sh` with `build.bat`.
 
 If you only need to build a specific tool (ex. sdfilter) substitute `all` for `<tool name>` (ex. `sdfilter`)
 
