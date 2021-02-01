@@ -4,19 +4,20 @@
 import 'dart:io';
 import 'package:args/args.dart';
 
-List getFiles(String input){
+List getFiles(String input) {
   // Check if input is filename
-  if(input.contains('.sdf')){
+  if (input.contains('.sdf')) {
     var inputFile = File(input);
     var output = [inputFile];
     return output;
-  } else { // input is Directory
+  } else {
+    // input is Directory
     var inputDir = Directory(input);
     var inputArray = inputDir.listSync(recursive: false, followLinks: false);
     var output = [];
     // Filter out non sdf and hidden files in directory
-    for(var item in inputArray){
-      if(item.toString().contains('.sdf') && ! item.toString().contains('/.')){
+    for (var item in inputArray) {
+      if (item.toString().contains('.sdf') && !item.toString().contains('/.')) {
         output.add(item);
       }
     }
@@ -24,34 +25,34 @@ List getFiles(String input){
   }
 }
 
-bool checkBlock(String SDFblock, String pattern, String operand, double limit){
-  if(SDFblock.split(pattern).length<2){
+bool checkBlock(String SDFblock, String pattern, String operand, double limit) {
+  if (SDFblock.split(pattern).length < 2) {
     print('Error parsing block:');
     print(SDFblock);
     print('Skipping');
     return false;
   } else {
     var val = double.tryParse(SDFblock.split(pattern)[1].split('>')[0].trim());
-    if(val==null){
+    if (val == null) {
       print('Error parsing block:');
       print(SDFblock);
       print('Skipping');
       return false;
     } else {
-      if(operand=='lt'){
-        if(val<limit){
+      if (operand == 'lt') {
+        if (val < limit) {
           return true;
         } else {
           return false;
         }
-      } else if(operand=='eq'){
-        if(val==limit){
+      } else if (operand == 'eq') {
+        if (val == limit) {
           return false;
         } else {
           return false;
         }
-      } else if(operand=='gt'){
-        if(val>limit){
+      } else if (operand == 'gt') {
+        if (val > limit) {
           return true;
         } else {
           return false;
@@ -64,16 +65,17 @@ bool checkBlock(String SDFblock, String pattern, String operand, double limit){
   }
 }
 
-void writeToOutput(String blockToWrite, String fileName){
+void writeToOutput(String blockToWrite, String fileName) {
   var outputFile = File(fileName);
-  if(outputFile.existsSync()){
+  if (outputFile.existsSync()) {
     outputFile.writeAsStringSync(blockToWrite, mode: FileMode.append);
   } else {
-    outputFile.writeAsStringSync(blockToWrite.trimLeft(), mode: FileMode.append);
+    outputFile.writeAsStringSync(blockToWrite.trimLeft(),
+        mode: FileMode.append);
   }
 }
 
-void printHelp(){
+void printHelp() {
   print('''
 SDF file filter v0.1 beta
 Usage: sdfilter -i /path/to/input(.sdf) -o /path/to/output.sdf -[l/e/g] -f <double>
@@ -93,28 +95,29 @@ Options:
     -p    --pattern             SDF field to check. Ex: <SCORE>
                                 Must end with > character
                                 Defaults to <SCORE>''');
-    exit(0);
+  exit(0);
 }
 
 void main(List<String> args) {
   var parser = ArgParser();
-  parser.addOption('input', abbr:'i');
-  parser.addOption('output', abbr:'o');
-  parser.addOption('filter', abbr:'f');
-  parser.addOption('pattern', abbr:'p', defaultsTo: '<SCORE>');
+  parser.addOption('input', abbr: 'i');
+  parser.addOption('output', abbr: 'o');
+  parser.addOption('filter', abbr: 'f');
+  parser.addOption('pattern', abbr: 'p', defaultsTo: '<SCORE>');
   parser.addFlag('lt', abbr: 'l');
   parser.addFlag('gt', abbr: 'g');
   parser.addFlag('eq', abbr: 'e');
   parser.addFlag('help', abbr: 'h');
   var arguments = parser.parse(args);
 
-  double filter = 0.0;  
-  if(arguments['filter']!=null){
+  // ignore: omit_local_variable_types
+  double filter = 0.0;
+  if (arguments['filter'] != null) {
     filter = double.tryParse(arguments['filter']);
   } else {
     printHelp();
   }
-  if(!(arguments['lt'] || arguments['eq'] || arguments['gt'])){
+  if (!(arguments['lt'] || arguments['eq'] || arguments['gt'])) {
     printHelp();
   }
 
@@ -123,36 +126,45 @@ void main(List<String> args) {
   var pattern = arguments['pattern'];
 
   // Help switch handler
-  if (arguments['help'] || arguments['input']==null || arguments['output']==null){
+  if (arguments['help'] ||
+      arguments['input'] == null ||
+      arguments['output'] == null) {
     printHelp();
   }
 
   var separator = '''
 \$\$\$\$''';
 
-  for(var fileName in getFiles(input)) {
+  for (var fileName in getFiles(input)) {
     try {
-      var contents = fileName.readAsStringSync() ;
+      var contents;
+      try {
+        contents = fileName.readAsStringSync();
+      } catch (e) {
+        var fileNameString = fileName.toString().split(' ')[1].split("'")[1];
+        contents = Process.runSync(
+                'iconv', ['-f', 'UTF-8', '-t', 'UTF-8', '-c', fileNameString])
+            .stdout;
+      }
       var contentArray = contents.split('\$\$\$\$');
       contentArray.removeLast();
-      for(var block in contentArray){
-        if(arguments['lt']){
-          if(checkBlock(block, pattern, 'lt', filter)){
-            writeToOutput(block+separator, output);
+      for (var block in contentArray) {
+        if (arguments['lt']) {
+          if (checkBlock(block, pattern, 'lt', filter)) {
+            writeToOutput(block + separator, output);
           }
-        } else if(arguments['eq']){
-          if(checkBlock(block, pattern, 'eq', filter)){
-            writeToOutput(block+separator, output);
+        } else if (arguments['eq']) {
+          if (checkBlock(block, pattern, 'eq', filter)) {
+            writeToOutput(block + separator, output);
           }
-        } else if(arguments['gt']){
-          if(checkBlock(block, pattern, 'gt', filter)){
-            writeToOutput(block+separator, output);
+        } else if (arguments['gt']) {
+          if (checkBlock(block, pattern, 'gt', filter)) {
+            writeToOutput(block + separator, output);
           }
         }
       }
-    }
-    catch(e) {
-      print('Error opening file: '+fileName.toString());
+    } catch (e) {
+      print('Error opening file: ' + fileName.toString());
       print(e);
       print('Skipping!');
     }

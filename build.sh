@@ -5,6 +5,6 @@ if [[ $1 == "" ]] || [[ $1 == "all" ]]; then
         dart2native $dart -o build/${dart%.*}
     done
 else
-    dart2native bin/$1 -o build/$1
+    dart2native bin/$1.dart -o build/$1
 fi
 echo Done!

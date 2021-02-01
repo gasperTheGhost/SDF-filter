@@ -11,7 +11,7 @@ IF "%arg1%" == "" (
             dart2native %%f -o build\%%~nf.exe
         )
     ) ELSE (
-        dart2native bin\%arg1% -o build\%arg1%
+        dart2native bin\%arg1%.dart -o build\%arg1%
     )
 )
 echo Done!
