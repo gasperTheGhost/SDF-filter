@@ -1,0 +1,15 @@
+[package]
+name = "SDFTools"
+version = "0.1.0"
+authors = ["gasperTheGhost <gasperTheGhost@users.noreply.github.com>"]
+edition = "2015"
+
+[lib]
+name = "sdf"
+path = "src/lib.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = {version = "~2.27.0", features = ["yaml"]}
+walkdir = "2"

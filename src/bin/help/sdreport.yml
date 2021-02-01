@@ -1,0 +1,34 @@
+name: sdreport
+version: "0.1.0"
+author: Gašper Tomšič <gasper.tomsic@covid.si>
+about: Produces text summaries of SD records
+args:
+    - input:
+        short: i
+        long: input
+        value_name: INPUT
+        help: Sets input. Can be file or directory.
+        required: true
+        takes_value: true
+    - recursive:
+        short: r
+        long: recursive
+        help: Enables recursive directory crawling
+        required: false
+    - output:
+        short: o
+        long: output
+        help: Sets output directory. Sets output directory. Must not be . as the output filename is the same as the input filename.
+        required: true
+        value_name: OUTPUT
+        takes_value: true
+    - pattern:
+        short: p
+        long: pattern
+        help: SDF field to write out.
+        required: false
+        value_name: PATTERN
+        takes_value: true
+        multiple: true
+        use_delimiter: true
+        default_value: SCORE

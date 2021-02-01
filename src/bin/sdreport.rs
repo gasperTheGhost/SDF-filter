@@ -1,0 +1,75 @@
+#![allow(non_snake_case)]
+
+use std::{
+    io,
+    fs::{self, metadata},
+    process
+};
+extern crate clap;
+use clap::{load_yaml, App};
+extern crate walkdir;
+use walkdir::WalkDir;
+
+fn main() -> io::Result<()>{
+    let yaml = load_yaml!("help/sdreport.yml");
+    let matches = App::from_yaml(yaml).get_matches();
+    let filetypes: Vec<&str> = vec!["test"]; //matches.values_of("filetypes").unwrap().collect();
+
+    let files: Vec<String>;
+    if let Some(path) = matches.value_of("input") {
+        if metadata(&path).unwrap().is_dir() { // Check if path points to dir
+            files = getFiles(&path, filetypes.clone(), (&matches.is_present("recursive")).to_owned());
+        } else { // Check if path points to a file
+            files = vec![(&path).to_string()];
+        }
+
+        // Iterate over files in directory (or single specified file)
+        for file in files {
+            println!("{}", &file);
+            let contents = sdf::read_to_string(&file);
+            let mut contentVec: Vec<&str> = contents.split("$$$$").collect();
+            contentVec.pop();
+            let mut output: Vec<String> = Vec::new();
+            for block in contentVec {
+                output.push(extractData(block, matches.value_of("pattern").unwrap()).to_string());
+                //println!("{:?}",output);
+            }
+            let out_path: &str = &(matches.value_of("output").unwrap().to_owned() + "/" + (&file.split("/").collect::<Vec<&str>>()).last().unwrap());
+            sdf::write_to_file(&(output.join("\n")), out_path);
+        }
+        Ok(())
+    } else {
+        process::exit(0x0100);
+    }
+
+}
+
+fn getFiles(path: &str, _filetypes: Vec<&str>, recursive: bool) -> Vec<String> {
+    let mut output: Vec<String> = Vec::new();
+    if recursive {
+        for entry in WalkDir::new(path) {
+            let entry = entry.unwrap();
+            if entry.metadata().unwrap().is_file() && !entry.path().to_str().unwrap().contains("/.")  {
+                output.push(entry.path().to_str().unwrap().to_owned());
+            }
+        }
+    } else {
+        for entry in fs::read_dir(path).unwrap() {
+            let entry = entry.unwrap();
+            if entry.path().is_file() && !entry.path().to_str().unwrap().contains("/.") {
+                output.push(entry.path().to_str().unwrap().to_owned());
+            }
+        }
+    }
+    return output;
+}
+
+fn extractData(sdfblock: &str, pattern: &str) -> String {
+    let firstSplit: Vec<&str> = sdfblock.split(pattern).collect();
+    if firstSplit.len() < 2 {
+        println!("Data field not found in block\n{}\n", &sdfblock);
+        return "N/A".to_owned();
+    } else {
+        return firstSplit[1].split(">").collect::<Vec<&str>>()[1].trim().to_string();
+    }
+}
