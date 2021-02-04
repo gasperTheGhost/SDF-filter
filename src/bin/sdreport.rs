@@ -11,7 +11,9 @@ use clap::{load_yaml, App};
 extern crate walkdir;
 use walkdir::WalkDir;
 extern crate indicatif;
-use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
+use indicatif::{HumanDuration, ParallelProgressIterator, ProgressBar, ProgressStyle};
+extern crate rayon;
+use rayon::prelude::*;
 
 fn main() -> io::Result<()>{
     let yaml = load_yaml!("help/sdreport.yml");
@@ -30,14 +32,14 @@ fn main() -> io::Result<()>{
         let started = Instant::now();
         let pb = ProgressBar::new(files.len() as u64);
         pb.set_style(ProgressStyle::default_bar()
-            .template("Processing file: {msg}\n{spinner} [{elapsed_precise}] [{wide_bar}] {pos}/{len} ({eta} @ {per_sec})")
+            .template("{spinner} [{elapsed_precise}] [{wide_bar}] {pos}/{len} ({eta} @ {per_sec})")
             .progress_chars("#>-"));
 
         // Iterate over files in directory (or single specified file)
-        for file in files {
+        println!("Processing files...");
+        let _iter: Vec<_> = files.par_iter().progress_with(pb).map(|file| {
             // println!("{}", &file);
-            pb.set_message(&file);
-            pb.inc(1);
+            // pb.set_message(&file);
             let contents = sdf::read_to_string(&file);
             let mut contentVec: Vec<&str> = contents.split("$$$$").collect();
             contentVec.pop();
@@ -48,8 +50,8 @@ fn main() -> io::Result<()>{
             }
             let out_path: &str = &(matches.value_of("output").unwrap().to_owned() + "/" + (&file.split("/").collect::<Vec<&str>>()).last().unwrap());
             sdf::write_to_file(&(output.join("\n")), out_path);
-        }
-        pb.finish();
+        }).collect();
+        // pb.finish();
         println!("Done in {}", HumanDuration(started.elapsed()));
         Ok(())
     } else {
