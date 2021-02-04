@@ -13,3 +13,4 @@ path = "src/lib.rs"
 [dependencies]
 clap = {version = "~2.27.0", features = ["yaml"]}
 walkdir = "2"
+indicatif = "0.15.0"

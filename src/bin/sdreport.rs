@@ -3,12 +3,15 @@
 use std::{
     io,
     fs::{self, metadata},
-    process
+    process,
+    time::Instant
 };
 extern crate clap;
 use clap::{load_yaml, App};
 extern crate walkdir;
 use walkdir::WalkDir;
+extern crate indicatif;
+use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
 
 fn main() -> io::Result<()>{
     let yaml = load_yaml!("help/sdreport.yml");
@@ -23,9 +26,18 @@ fn main() -> io::Result<()>{
             files = vec![(&path).to_string()];
         }
 
+        // Draw a nice progress bar
+        let started = Instant::now();
+        let pb = ProgressBar::new(files.len() as u64);
+        pb.set_style(ProgressStyle::default_bar()
+            .template("Processing file: {msg}\n{spinner} [{elapsed_precise}] [{wide_bar}] {pos}/{len} ({eta} @ {per_sec})")
+            .progress_chars("#>-"));
+
         // Iterate over files in directory (or single specified file)
         for file in files {
-            println!("{}", &file);
+            // println!("{}", &file);
+            pb.set_message(&file);
+            pb.inc(1);
             let contents = sdf::read_to_string(&file);
             let mut contentVec: Vec<&str> = contents.split("$$$$").collect();
             contentVec.pop();
@@ -37,6 +49,8 @@ fn main() -> io::Result<()>{
             let out_path: &str = &(matches.value_of("output").unwrap().to_owned() + "/" + (&file.split("/").collect::<Vec<&str>>()).last().unwrap());
             sdf::write_to_file(&(output.join("\n")), out_path);
         }
+        pb.finish();
+        println!("Done in {}", HumanDuration(started.elapsed()));
         Ok(())
     } else {
         process::exit(0x0100);
@@ -45,6 +59,8 @@ fn main() -> io::Result<()>{
 }
 
 fn getFiles(path: &str, _filetypes: Vec<&str>, recursive: bool) -> Vec<String> {
+    println!("Making list of files in directory...");
+    
     let mut output: Vec<String> = Vec::new();
     if recursive {
         for entry in WalkDir::new(path) {
