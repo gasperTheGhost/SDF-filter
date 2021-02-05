@@ -22,7 +22,9 @@ fn main() -> io::Result<()>{
 
     let files: Vec<String>;
     if let Some(path) = matches.value_of("input") {
-        if metadata(&path).unwrap().is_dir() { // Check if path points to dir
+        if path == "-"{
+            files = vec![(&path).to_string()];
+        } else if metadata(&path).unwrap().is_dir() { // Check if path points to dir
             files = getFiles(&path, filetypes.clone(), (&matches.is_present("recursive")).to_owned());
         } else { // Check if path points to a file
             files = vec![(&path).to_string()];
@@ -48,8 +50,11 @@ fn main() -> io::Result<()>{
                 output.push(extractData(block, matches.value_of("pattern").unwrap()).to_string());
                 //println!("{:?}",output);
             }
-            let out_path: &str = &(matches.value_of("output").unwrap().to_owned() + "/" + (&file.split("/").collect::<Vec<&str>>()).last().unwrap());
-            sdf::write_to_file(&(output.join("\n")), out_path);
+            let out_path: String = match file.trim() {
+                "-" => (matches.value_of("output").unwrap().to_owned() + "/stdin.txt"),
+                _ => (matches.value_of("output").unwrap().to_owned() + "/" + (&file.split("/").collect::<Vec<&str>>()).last().unwrap()),
+            };
+            sdf::write_to_file(&(output.join("\n")), &out_path);
         }).collect();
         // pb.finish();
         println!("Done in {}", HumanDuration(started.elapsed()));
