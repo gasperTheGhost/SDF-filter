@@ -1,0 +1,49 @@
+name: sdsplit
+version: "0.1.0"
+author: Gašper Tomšič <gasper.tomsic@covid.si>
+about: Splits SDF file into a specified number of equal files or files with an equal number of records.
+args:
+    - input:
+        short: i
+        long: input
+        value_name: INPUT
+        help: Sets input file. - reads from stdin.
+        required: true
+        takes_value: true
+        display_order: 1
+    - number_of_files:
+        short: f
+        long: files
+        value_name: NUM OF PACKAGES
+        help: Sets nr of packeges to split input into.
+        required_unless: size_of_files
+        conflicts_with: size_of_files
+        takes_value: true
+        display_order: 2
+    - size_of_files:
+        short: s
+        long: size
+        value_name: PACKAGE SIZE
+        help: Sets size of packaes to split input into.
+        required_unless: number_of_files
+        conflicts_with: number_of_files
+        takes_value: true
+        display_order: 3
+    - output:
+        short: o
+        long: output
+        value_name: OUTPUT
+        help: Sets output directory.
+        required: false
+        default_value: .
+        takes_value: true
+        display_order: 4
+    - name:
+        short: n
+        long: name
+        value_name: NAME
+        help: "Sets output file names. This is\nalways suffixed with _#"
+        required: false
+        takes_value: true
+        default_value: temp
+        display_order: 5
