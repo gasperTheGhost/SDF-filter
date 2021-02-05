@@ -1,7 +1,7 @@
-name: sdreport
+name: sddistill
 version: "0.1.0"
 author: Gašper Tomšič <gasper.tomsic@covid.si>
-about: Produces text summaries of SD records
+about: "Distills values of a specified data field\nin SD records"
 args:
     - input:
         short: i

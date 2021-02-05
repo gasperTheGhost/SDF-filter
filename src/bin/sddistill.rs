@@ -16,7 +16,7 @@ extern crate rayon;
 use rayon::prelude::*;
 
 fn main() -> io::Result<()>{
-    let yaml = load_yaml!("help/sdreport.yml");
+    let yaml = load_yaml!("help/sddistill.yml");
     let matches = App::from_yaml(yaml).get_matches();
     let filetypes: Vec<&str> = vec!["test"]; //matches.values_of("filetypes").unwrap().collect();
 
