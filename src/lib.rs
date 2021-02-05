@@ -173,40 +173,36 @@ pub mod sdfrecord {
         /*
          writeRec() - write current record to STDOUT (mol + data)
         */
-        pub fn writeRec(&self) -> io::Result<()> {
+        pub fn writeRec(&self) {
             if self.lines.len() > 0 {
                 for line in &self.lines {
-                    io::stdout().write_all(format!("{}\n",line).as_bytes())?;
+                    io::stdout().write_all(format!("{}\n",line).as_bytes()).expect("Error writing to stdout");
                 }
-                io::stdout().write_all(b"$$$$\n")?;
+                io::stdout().write_all(b"$$$$\n").expect("Error writing to stdout");
             }
-            Ok(())
         }
 
         /*
          writeMol() - write current mol record to STDOUT
         */
-        pub fn writeMol(&self) -> io::Result<()> {
+        pub fn writeMol(&self) {
             for line in &self.lines {
-                io::stdout().write_all((line.to_string()+"\n").as_bytes())?;
+                io::stdout().write_all((line.to_string()+"\n").as_bytes()).expect("Error writing to stdout");
                 if line == "M  END" {
                     break;
                 }
             }
-            Ok(())
         }
 
         /*
          writeData() - list data field/values to STDOUT
         */
-        pub fn writeData(&self) -> io::Result<()> {
+        pub fn writeData(&self) {
             for (key, val) in &self.data {
                 // Output: $key eq "val1; val2"\n
                 let output = String::from("$")+key+" eq "+"\""+&(val.join("; "))+"\"\n";
-                io::stdout().write_all(output.as_bytes())?;
+                io::stdout().write_all(output.as_bytes()).expect("Error writing to stdout");
             }
-
-            Ok(())
         }
 
         /*
