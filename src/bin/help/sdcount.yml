@@ -8,6 +8,6 @@ args:
         long: input
         value_name: INPUT
         help: "Sets input file. If missing\nreads from stdin."
-        required: true
+        required: false
         takes_value: true
         index: 1
