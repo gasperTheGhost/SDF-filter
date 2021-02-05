@@ -1,7 +1,7 @@
-name: sdreport
+name: sddistill
 version: "0.1.0"
 author: Gašper Tomšič <gasper.tomsic@covid.si>
-about: Produces text summaries of SD records
+about: "Distills values of a specified data field\nin SD records"
 args:
     - input:
         short: i
@@ -18,7 +18,7 @@ args:
     - output:
         short: o
         long: output
-        help: Sets output directory. Sets output directory. Must not be . as the output filename is the same as the input filename.
+        help: "Sets output directory. Must not be\n. as the output filename is the\nsame as the input filename."
         required: true
         value_name: OUTPUT
         takes_value: true
@@ -32,3 +32,9 @@ args:
         multiple: true
         use_delimiter: true
         default_value: SCORE
+    - concatenate:
+        short: c
+        long: concat
+        help: Gathers results in a single file.
+        required: false
+        takes_value: false

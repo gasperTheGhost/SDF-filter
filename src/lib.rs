@@ -2,16 +2,37 @@
 
 use std::{
     fs::{self, File},
-    io::{prelude::*, BufReader},
+    io::{self, prelude::*, BufReader},
     path::Path,
 };
 
-pub fn lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
-    let file = File::open(filename).expect("no such file");
-    let buf = BufReader::new(file);
-    buf.lines()
-        .map(|l| l.expect("Could not parse line"))
-        .collect()
+pub fn lines_from_file(filename: &str) -> Vec<String> {
+    let mut reader: Box<dyn BufRead> = match filename {
+        "-" => Box::new(BufReader::new(io::stdin())),
+        _ => Box::new(BufReader::new(fs::File::open(Path::new(filename)).expect("No such file")))
+    };
+    let mut buf: Vec<u8> = Vec::new();
+    let mut output: Vec<String> = Vec::new();
+    while let Ok(_) = reader.read_until(b'\n', &mut buf) {
+        if buf.is_empty() {
+            break;
+        }
+        let line = String::from_utf8_lossy(&buf);
+        output.push(line.into_owned().trim().to_owned());
+        buf.clear();
+    }
+    return output;
+}
+
+pub fn read_to_string(filename: &str) -> String {
+    let mut reader: Box<dyn BufRead> = match filename {
+        "-" => Box::new(BufReader::new(io::stdin())),
+        _ => Box::new(BufReader::new(fs::File::open(Path::new(filename)).expect("No such file")))
+    };
+    let mut buf: Vec<u8> = Vec::new();
+    reader.read_to_end(&mut buf).expect("Cannot read file");
+    let buf = String::from_utf8_lossy(&buf);
+    return buf.into_owned();
 }
 
 pub fn write_to_file(content: &str, filename: &str) {
@@ -31,14 +52,6 @@ pub fn write_to_file(content: &str, filename: &str) {
         Err(why) => panic!("Couldn't write to {}: {}", display, why),
         Ok(_) => (),
     }
-}
-
-pub fn read_to_string(filename: impl AsRef<Path>) -> String {
-    let mut file = File::open(&filename).expect("No such file");
-    let mut buf: Vec<u8> = Vec::new();
-    file.read_to_end(&mut buf).expect("Cannot read file");
-    let buf = String::from_utf8_lossy(&buf);
-    return buf.into_owned();
 }
 
 pub mod sdfrecord {
@@ -160,40 +173,36 @@ pub mod sdfrecord {
         /*
          writeRec() - write current record to STDOUT (mol + data)
         */
-        pub fn writeRec(&self) -> io::Result<()> {
+        pub fn writeRec(&self) {
             if self.lines.len() > 0 {
                 for line in &self.lines {
-                    io::stdout().write_all(format!("{}\n",line).as_bytes())?;
+                    io::stdout().write_all(format!("{}\n",line).as_bytes()).expect("Error writing to stdout");
                 }
-                io::stdout().write_all(b"$$$$\n")?;
+                io::stdout().write_all(b"$$$$\n").expect("Error writing to stdout");
             }
-            Ok(())
         }
 
         /*
          writeMol() - write current mol record to STDOUT
         */
-        pub fn writeMol(&self) -> io::Result<()> {
+        pub fn writeMol(&self) {
             for line in &self.lines {
-                io::stdout().write_all((line.to_string()+"\n").as_bytes())?;
+                io::stdout().write_all((line.to_string()+"\n").as_bytes()).expect("Error writing to stdout");
                 if line == "M  END" {
                     break;
                 }
             }
-            Ok(())
         }
 
         /*
          writeData() - list data field/values to STDOUT
         */
-        pub fn writeData(&self) -> io::Result<()> {
+        pub fn writeData(&self) {
             for (key, val) in &self.data {
                 // Output: $key eq "val1; val2"\n
                 let output = String::from("$")+key+" eq "+"\""+&(val.join("; "))+"\"\n";
-                io::stdout().write_all(output.as_bytes())?;
+                io::stdout().write_all(output.as_bytes()).expect("Error writing to stdout");
             }
-
-            Ok(())
         }
 
         /*
