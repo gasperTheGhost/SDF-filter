@@ -32,7 +32,7 @@ FLAGS:
 OPTIONS:
     -i, --input <INPUT>              Sets input file. - reads from stdin.
     -f, --files <NUM OF PACKAGES>    Sets nr of packeges to split input into.
-    -s, --size <PACKAGE SIZE>        Sets size of packaes to split input into.
+    -s, --size <PACKAGE SIZE>        Sets size of packages to split input into.
     -o, --output <OUTPUT>            Sets output directory. [default: .]
     -n, --name <NAME>                Sets output file names. This is
                                      always suffixed with _# [default: temp]
@@ -40,13 +40,13 @@ OPTIONS:
     --files and --size are incompatible, but at least one must be specified
 ```
 
-### sdreport
+### sddistill
 
-Reads through SDF records, extracts the data from a specified field (pattern) and exports it into (a) file(s) with each value in a new line.
+Distills values of a specified data field in SD records.
 
 ```
 USAGE:
-    sdreport [FLAGS] [OPTIONS] --input <INPUT> --output <OUTPUT>
+    sddistill [FLAGS] [OPTIONS] --input <INPUT> --output <OUTPUT>
 
 FLAGS:
     -h, --help         Prints help information
@@ -59,7 +59,7 @@ OPTIONS:
     -o, --output <OUTPUT>         Sets output directory. Must not be
                                   . as the output filename is the
                                   same as the input filename.
-    -p, --pattern <PATTERN>...    SDF field to write out. [default: SCORE]
+    -p, --pattern <PATTERN>       SDF field to write out. [default: SCORE]
 ```
 
 ### sdcount
@@ -77,4 +77,26 @@ FLAGS:
 ARGS:
     <INPUT>    Sets input file. If missing
                reads from stdin.
+```
+
+### lineconv
+
+Converts between CRLF and LF line separators. Replaces any non-UTF8 data with �.
+
+```
+USAGE:
+    lineconv [FLAGS] [OPTIONS] --crlf --lf
+
+FLAGS:
+        --lf                 Sets EoL sequence to LF (unix)
+        --crlf               Sets EoL sequence to CRLF (DOS)
+    -n, --non-destructive    Keeps non-UTF8 data untouched
+    -h, --help               Prints help information
+    -V, --version            Prints version information
+
+OPTIONS:
+    -i, --input <INPUT>      Sets input file. If missing
+                             reads from stdin.
+    -o, --output <OUTPUT>    Sets output file. If missing
+                             writes to stdout.
 ```
