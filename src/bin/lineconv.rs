@@ -27,6 +27,7 @@ fn main() {
             if buf.is_empty() {
                 break;
             }
+            &buf.pop();
             if buf.last().unwrap().to_owned() == b'\r' {
                 &buf.pop();
             }

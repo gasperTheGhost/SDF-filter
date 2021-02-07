@@ -17,8 +17,12 @@ pub fn lines_from_file(filename: &str) -> Vec<String> {
         if buf.is_empty() {
             break;
         }
+        &buf.pop();
+        if buf.last().unwrap().to_owned() == b'\r' {
+            &buf.pop();
+        }
         let line = String::from_utf8_lossy(&buf);
-        output.push(line.into_owned().trim().to_owned());
+        output.push(line.into_owned());
         buf.clear();
     }
     return output;
