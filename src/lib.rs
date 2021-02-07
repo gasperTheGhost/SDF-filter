@@ -54,6 +54,25 @@ pub fn write_to_file(content: &str, filename: &str) {
     }
 }
 
+pub fn write_bytes_to_file(content: Vec<u8>, filename: &str) {
+    let path = Path::new(filename);
+    if filename.contains("/") {
+        let prefix = path.parent().unwrap();
+        fs::create_dir_all(prefix).unwrap();
+    }
+    let display = path.display();
+
+    let mut file = match File::create(&path) {
+        Err(why) => panic!("Couldn't create {}: {}", display, why),
+        Ok(file) => file,
+    };
+
+    match file.write_all(&content) {
+        Err(why) => panic!("Couldn't write to {}: {}", display, why),
+        Ok(_) => (),
+    }
+}
+
 pub mod sdfrecord {
 
     use std::io::{self, Write};

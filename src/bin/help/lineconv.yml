@@ -31,3 +31,9 @@ args:
         conflicts_with: crlf
         takes_value: false
         display_order: 1
+    - bytes:
+        short: n
+        long: non-destructive
+        help: "Keeps non-UTF8 data untouched"
+        required: false
+        takes_value: false
