@@ -24,7 +24,7 @@ args:
         short: s
         long: size
         value_name: PACKAGE SIZE
-        help: Sets size of packaes to split input into.
+        help: Sets size of packages to split input into.
         required_unless: number_of_files
         conflicts_with: number_of_files
         takes_value: true

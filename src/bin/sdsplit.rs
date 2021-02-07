@@ -15,7 +15,7 @@ fn main(){
 }
 
 fn split_package_num(package: &str, threads: usize, outputdir: &str, filename: &str) {
-    let separator = "\n$$$$\n";
+    let separator = "\n$$$$";
     let contents = sdf::read_to_string(package);
     let mut content_iterator: Vec<&str> = contents.split("\n$$$$").collect();
     content_iterator.pop();
@@ -42,13 +42,13 @@ fn split_package_num(package: &str, threads: usize, outputdir: &str, filename: &
             content = content.to_owned() + &(content_iterator[current as usize].to_owned() + separator);
             n = n + 1;
         }
-        sdf::write_to_file(&("\n".to_owned() + &content.trim()), &(outputdir.to_owned() + "/"+ &filename + &(current+1).to_string() + ".sdf"));
+        sdf::write_to_file(content.trim(), &(outputdir.to_owned() + "/"+ &filename + &(current+1).to_string() + ".sdf"));
         current = current + 1;
     }
 }
 
 fn split_package_size(package: &str, size: usize, outputdir: &str, filename: &str) {
-    let separator = "\n$$$$\n";
+    let separator = "\n$$$$";
     let contents = sdf::read_to_string(package);
     let mut content_iterator: Vec<&str> = contents.split("\n$$$$").collect();
     content_iterator.pop();
@@ -70,7 +70,7 @@ fn split_package_size(package: &str, size: usize, outputdir: &str, filename: &st
 
     let mut current = 0;
     for file in files {
-        sdf::write_to_file(&("\n".to_owned() + &file.trim()), &(outputdir.to_owned() + "/"+ &filename + &(current+1).to_string() + ".sdf"));
+        sdf::write_to_file(file.trim(), &(outputdir.to_owned() + "/"+ &filename + &(current+1).to_string() + ".sdf"));
         current = current + 1;
     }
 }
