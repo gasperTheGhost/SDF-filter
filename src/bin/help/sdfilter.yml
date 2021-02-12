@@ -36,8 +36,9 @@ args:
         value_name: VALUE
         takes_value: true
         display_order: 5
+        allow_hyphen_values: true
     - operand:
-        short: op
+        short: O
         long: operand
         required: true
         takes_value: true
