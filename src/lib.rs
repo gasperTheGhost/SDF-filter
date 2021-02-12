@@ -1,10 +1,34 @@
 #![allow(non_snake_case)]
 
 use std::{
-    fs::{self, File},
+    fs::{self, File, OpenOptions},
     io::{self, prelude::*, BufReader},
     path::Path,
 };
+
+pub fn append_line_to_file(filname: &str, line: &str) {
+    // Create path if inexistent
+    let path = Path::new(filename);
+    if filename.contains("/") {
+        let prefix = path.parent().unwrap();
+        fs::create_dir_all(prefix).unwrap();
+    }
+    let display = path.display();
+    let mut file = match File::create(&path) {
+        Err(why) => panic!("Couldn't create {}: {}", display, why),
+        Ok(file) => file,
+    };
+
+    // Open file, append line, close file
+    let mut file = OpenOptions::new()
+        .append(true)
+        .open(&filename)
+        .unwrap();
+    if let Err(e) = writeln!(file, &line) {
+        eprintln!("Couldn't write to file: {}", e);
+    }
+    file.close();
+}
 
 pub fn lines_from_file(filename: &str) -> Vec<String> {
     let mut reader: Box<dyn BufRead> = match filename {
