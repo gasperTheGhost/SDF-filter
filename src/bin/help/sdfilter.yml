@@ -1,0 +1,57 @@
+name: sdfilter
+version: "0.1.0"
+author: Gašper Tomšič <gasper.tomsic@covid.si>
+about: Outputs file(s) with records that fits specified criterium.
+args:
+    - input:
+        short: i
+        long: input
+        value_name: INPUT
+        help: "Sets input. Can be file or directory.\n- reads from stdin"
+        required: true
+        takes_value: true
+        display_order: 1
+    - output:
+        short: o
+        long: output
+        help: "Sets output directory. Must not be\n. as the output filename is the\nsame as the input filename."
+        required: true
+        value_name: OUTPUT
+        takes_value: true
+        display_order: 2
+    - field:
+        short: f
+        long: field
+        help: SDF field to check.
+        required: true
+        value_name: FIELD
+        takes_value: true
+        default_value: SCORE
+        display_order: 3
+    - value:
+        short: v
+        long: value
+        help: Value to be compared to.
+        required: true
+        value_name: VALUE
+        takes_value: true
+        display_order: 5
+    - operand:
+        short: op
+        long: operand
+        required: true
+        takes_value: true
+        possible_values:
+            - lt
+            - le
+            - eq
+            - ne
+            - ge
+            - gt
+        display_order: 4
+    - concatenate:
+        short: c
+        long: concat
+        help: Gathers results in a single file.
+        required: false
+        takes_value: false
