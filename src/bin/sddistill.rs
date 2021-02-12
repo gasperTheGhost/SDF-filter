@@ -2,17 +2,12 @@
 
 use std::{
     io,
-    fs::{self, metadata},
+    fs::metadata,
     process,
     time::Instant
 };
-extern crate clap;
 use clap::{load_yaml, App};
-extern crate walkdir;
-use walkdir::WalkDir;
-extern crate indicatif;
 use indicatif::{HumanDuration, ParallelProgressIterator, ProgressBar, ProgressStyle};
-extern crate rayon;
 use rayon::prelude::*;
 
 fn main() -> io::Result<()>{
@@ -27,7 +22,7 @@ fn main() -> io::Result<()>{
         if path == "-"{ // If input is "-" then read from stdin
             files = vec![(&path).to_string()];
         } else if metadata(&path).unwrap().is_dir() { // Check if path points to dir
-            files = getFiles(&path, filetypes.clone(), (&matches.is_present("recursive")).to_owned());
+            files = sdf::getFiles(&path, filetypes.clone(), (&matches.is_present("recursive")).to_owned());
         } else { // Check if path points to a file
             files = vec![(&path).to_string()];
         }
@@ -73,28 +68,6 @@ fn main() -> io::Result<()>{
         process::exit(0x0100);
     }
 
-}
-
-fn getFiles(path: &str, _filetypes: Vec<&str>, recursive: bool) -> Vec<String> {
-    println!("Making list of files in directory...");
-    
-    let mut output: Vec<String> = Vec::new();
-    if recursive { // Use WalkDir for recursive indexing
-        for entry in WalkDir::new(path) {
-            let entry = entry.unwrap();
-            if entry.metadata().unwrap().is_file() && !entry.path().to_str().unwrap().contains("/.")  {
-                output.push(entry.path().to_str().unwrap().to_owned());
-            }
-        }
-    } else { // Index files in direcory non-recursively
-        for entry in fs::read_dir(path).unwrap() {
-            let entry = entry.unwrap();
-            if entry.path().is_file() && !entry.path().to_str().unwrap().contains("/.") {
-                output.push(entry.path().to_str().unwrap().to_owned());
-            }
-        }
-    }
-    return output;
 }
 
 fn extractData(sdfblock: &str, pattern: &str) -> String {

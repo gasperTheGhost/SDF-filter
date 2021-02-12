@@ -5,29 +5,46 @@ use std::{
     io::{self, prelude::*, BufReader},
     path::Path,
 };
+use walkdir::WalkDir;
 
-pub fn append_line_to_file(filname: &str, line: &str) {
+pub fn getFiles(path: &str, _filetypes: Vec<&str>, recursive: bool) -> Vec<String> {
+    println!("Making list of files in directory...");
+    
+    let mut output: Vec<String> = Vec::new();
+    if recursive { // Use WalkDir for recursive indexing
+        for entry in WalkDir::new(path) {
+            let entry = entry.unwrap();
+            if entry.metadata().unwrap().is_file() && !entry.path().to_str().unwrap().contains("/.")  {
+                output.push(entry.path().to_str().unwrap().to_owned());
+            }
+        }
+    } else { // Index files in direcory non-recursively
+        for entry in fs::read_dir(path).unwrap() {
+            let entry = entry.unwrap();
+            if entry.path().is_file() && !entry.path().to_str().unwrap().contains("/.") {
+                output.push(entry.path().to_str().unwrap().to_owned());
+            }
+        }
+    }
+    return output;
+}
+
+pub fn append_line_to_file(filename: &str, line: &str) {
     // Create path if inexistent
     let path = Path::new(filename);
     if filename.contains("/") {
         let prefix = path.parent().unwrap();
         fs::create_dir_all(prefix).unwrap();
     }
-    let display = path.display();
-    let mut file = match File::create(&path) {
-        Err(why) => panic!("Couldn't create {}: {}", display, why),
-        Ok(file) => file,
-    };
 
     // Open file, append line, close file
     let mut file = OpenOptions::new()
         .append(true)
         .open(&filename)
         .unwrap();
-    if let Err(e) = writeln!(file, &line) {
+    if let Err(e) = writeln!(file, "{}", &line) {
         eprintln!("Couldn't write to file: {}", e);
     }
-    file.close();
 }
 
 pub fn lines_from_file(filename: &str) -> Vec<String> {
@@ -122,9 +139,9 @@ pub mod sdfrecord {
 */
 
     pub struct SDFRecord {
-        lines: Vec<String>,
-        data: BTreeMap<String, Vec<String>>, // Should maybe be replaced by HashMap
-        dataref: BTreeMap<String, usize>, // Should maye be replaced by HashMap
+        pub lines: Vec<String>,
+        pub data: BTreeMap<String, Vec<String>>, // Should maybe be replaced by HashMap
+        pub dataref: BTreeMap<String, usize>, // Should maye be replaced by HashMap
     }
 
     impl SDFRecord {
