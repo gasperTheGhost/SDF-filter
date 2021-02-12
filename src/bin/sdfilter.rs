@@ -17,7 +17,7 @@ fn main() {
     let input = matches.value_of("input");
     let output = matches.value_of("output").unwrap();
     let field = matches.value_of("field").unwrap();
-    let value: f64 = matches.value_of("value").unwrap().parse().expect("Value is not valid float!");
+    let refvalue: f64 = matches.value_of("value").unwrap().parse().expect("Value is not valid float!");
     let operand = matches.value_of("operand").unwrap();
     let filetypes: Vec<&str> = vec!["test"]; //matches.values_of("filetypes").unwrap().collect();
     
@@ -35,23 +35,27 @@ fn main() {
         if output == "-" {
             for file in files { // Use par_iter() for easy parallelization
                 // Read file contents to string
-                let mut contents = sdf::lines_from_file(&file);
+                let contents = sdf::read_to_string(&file);
+                let mut contents_vec: Vec<&str> = contents.split("\n$$$$").collect();
+                contents_vec.pop();
                 
                 // Iterate over SDRecords
                 let mut matching_records: Vec<String> = Vec::new();
-                let mut record: SDFRecord = SDFRecord::new();
-                while &contents.len() > &0 {
-                    // Turn vector into SDFRecord
-                    contents = record.readRec(contents);
+                for block in contents_vec {
+                    let mut lines: Vec<String> = (block.to_string() + "\n$$$$").split('\n').map(|a|a.replace("\r","").to_string()).collect();
+                    lines.remove(0);
+                    let mut record: SDFRecord = SDFRecord::new();
+                    record.readRec(lines);
+                    let value: f64 = record.data[field][0].parse().unwrap();
 
                     // Get matching records
-                    if evaluate(record.copy(), field, value, operand) {
+                    if evaluate(value, refvalue, operand) {
                         matching_records.push(record.lines.join("\n"));
                     }
                 }
 
                 // Write vector of extracted data to stdout
-                io::stdout().write_all(matching_records.join("\n").as_bytes()).expect("Error writing to stdout");
+                io::stdout().write_all((matching_records.join("\n$$$$")+"\n$$$$").trim().as_bytes()).expect("Error writing to stdout");
             }
         } else {
             // Draw a nice progress bar
@@ -66,17 +70,21 @@ fn main() {
 
             let _iter: Vec<_> = files.par_iter().progress_with(pb).map(|file| { // Use par_iter() for easy parallelization
                 // Read file contents to string
-                let mut contents = sdf::lines_from_file(&file);
+                let contents = sdf::read_to_string(&file);
+                let mut contents_vec: Vec<&str> = contents.split("\n$$$$").collect();
+                contents_vec.pop();
                 
                 // Iterate over SDRecords
                 let mut matching_records: Vec<String> = Vec::new();
-                let mut record: SDFRecord = SDFRecord::new();
-                while &contents.len() > &0 {
-                    // Turn vector into SDFRecord
-                    contents = record.readRec(contents);
+                for block in contents_vec {
+                    let mut lines: Vec<String> = (block.to_string() + "\n$$$$").split('\n').map(|a|a.replace("\r","").to_string()).collect();
+                    lines.remove(0);
+                    let mut record: SDFRecord = SDFRecord::new();
+                    record.readRec(lines);
+                    let value: f64 = record.data[field][0].parse().unwrap();
 
                     // Get matching records
-                    if evaluate(record.copy(), field, value, operand) {
+                    if evaluate(value, refvalue, operand) {
                         matching_records.push(record.lines.join("\n"));
                     }
                 }
@@ -87,7 +95,7 @@ fn main() {
                     _ => (output.to_owned() + "/" + (&file.split("/").collect::<Vec<&str>>()).last().unwrap()),
                 };
                 // Write vector of extracted data to file
-                sdf::write_to_file(&(matching_records.join("\n")), &out_path);
+                sdf::write_to_file(&((matching_records.join("\n$$$$")+"\n$$$$").trim()), &out_path);
             }).collect();
 
             println!("Done in {}", HumanDuration(started.elapsed()));
@@ -99,35 +107,35 @@ fn main() {
     }
 }
 
-fn evaluate(record: SDFRecord, field: &str, value: f64, operand: &str) -> bool {
+fn evaluate(value: f64, refvalue: f64, operand: &str) -> bool {
     match operand {
         "lt" => {
-            if record.data[&field.to_string()][0].parse::<f64>().unwrap() < value {
+            if value < refvalue {
                 return true;
             } else {return false}
         },
         "le" => {
-            if record.data[&field.to_string()][0].parse::<f64>().unwrap() <= value {
+            if value <= refvalue {
                 return true;
             } else {return false}
         },
         "eq" => {
-            if record.data[&field.to_string()][0].parse::<f64>().unwrap() == value {
+            if value == refvalue {
                 return true;
             } else {return false}
         },
         "ne" => {
-            if record.data[&field.to_string()][0].parse::<f64>().unwrap() != value {
+            if value != refvalue {
                 return true;
             } else {return false}
         },
         "ge" => {
-            if record.data[&field.to_string()][0].parse::<f64>().unwrap() >= value {
+            if value >= refvalue {
                 return true;
             } else {return false}
         },
         "gt" => {
-            if record.data[&field.to_string()][0].parse::<f64>().unwrap() > value {
+            if value > refvalue {
                 return true;
             } else {return false}
         },
