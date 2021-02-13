@@ -118,6 +118,28 @@ pub fn write_bytes_to_file(content: Vec<u8>, filename: &str) {
     }
 }
 
+pub fn prepare_file_for_SDF(file: &str) -> Vec<Vec<String>>{
+    // Read file contents to string
+    let contents = read_to_string(file);
+    let mut contents_vec: Vec<&str> = contents.split("\n$$$$").collect();
+    contents_vec.pop();
+    
+    // Iterate over SD Records (as strings)
+    let mut output: Vec<Vec<String>> = Vec::new();
+    let mut i = 0;
+    for block in contents_vec {
+        // Turn strings into a vector of lines
+        let mut lines: Vec<String> = (block.to_string() + "\n$$$$").split('\n').map(|a|a.replace("\r","").to_string()).collect();
+        if i == 0 {
+            i = i + 1;
+        } else {
+            lines.remove(0);
+        }
+        output.push(lines);
+    }
+    return output;
+}
+
 pub mod sdfrecord {
 
     use std::io::{self, Write};

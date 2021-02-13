@@ -34,18 +34,10 @@ fn main() {
 
         if output == "-" {
             for file in files { // Use par_iter() for easy parallelization
-                // Read file contents to string
-                let contents = sdf::read_to_string(&file);
-                let mut contents_vec: Vec<&str> = contents.split("\n$$$$").collect();
-                contents_vec.pop();
-                
-                // Iterate over SDRecords
                 let mut matching_records: Vec<String> = Vec::new();
-                for block in contents_vec {
-                    let mut lines: Vec<String> = (block.to_string() + "\n$$$$").split('\n').map(|a|a.replace("\r","").to_string()).collect();
-                    lines.remove(0);
+                for block in sdf::prepare_file_for_SDF(&file) {
                     let mut record: SDFRecord = SDFRecord::new();
-                    record.readRec(lines);
+                    record.readRec(block);
                     let value: f64 = record.data[field][0].parse().unwrap();
 
                     // Get matching records
@@ -55,7 +47,7 @@ fn main() {
                 }
 
                 // Write vector of extracted data to stdout
-                io::stdout().write_all((matching_records.join("\n$$$$")+"\n$$$$").trim().as_bytes()).expect("Error writing to stdout");
+                io::stdout().write_all((matching_records.join("\n$$$$\n")+"\n$$$$").trim().as_bytes()).expect("Error writing to stdout");
             }
         } else {
             // Draw a nice progress bar
@@ -69,18 +61,10 @@ fn main() {
             println!("Processing files...");
 
             let _iter: Vec<_> = files.par_iter().progress_with(pb).map(|file| { // Use par_iter() for easy parallelization
-                // Read file contents to string
-                let contents = sdf::read_to_string(&file);
-                let mut contents_vec: Vec<&str> = contents.split("\n$$$$").collect();
-                contents_vec.pop();
-                
-                // Iterate over SDRecords
                 let mut matching_records: Vec<String> = Vec::new();
-                for block in contents_vec {
-                    let mut lines: Vec<String> = (block.to_string() + "\n$$$$").split('\n').map(|a|a.replace("\r","").to_string()).collect();
-                    lines.remove(0);
+                for block in sdf::prepare_file_for_SDF(&file) {
                     let mut record: SDFRecord = SDFRecord::new();
-                    record.readRec(lines);
+                    record.readRec(block);
                     let value: f64 = record.data[field][0].parse().unwrap();
 
                     // Get matching records
@@ -95,7 +79,7 @@ fn main() {
                     _ => (output.to_owned() + "/" + (&file.split("/").collect::<Vec<&str>>()).last().unwrap()),
                 };
                 // Write vector of extracted data to file
-                sdf::write_to_file(&((matching_records.join("\n$$$$")+"\n$$$$").trim()), &out_path);
+                sdf::write_to_file(&((matching_records.join("\n$$$$\n")+"\n$$$$").trim()), &out_path);
             }).collect();
 
             println!("Done in {}", HumanDuration(started.elapsed()));
