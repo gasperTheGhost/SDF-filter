@@ -1,0 +1,81 @@
+name: sdreport
+version: "0.1.0"
+author: Gašper Tomšič <gasper.tomsic@covid.si>
+about: Produces text summaries of SD records.
+args:
+    - input:
+        short: i
+        long: input
+        help: Sets input file. If missing or - reads from stdin.
+        required: false
+        default_value: "-"
+        takes_value: true
+        display_order: 1
+    - idfield:
+        short: I
+        long: idfield
+        help: "Data field to use as ligand ID."
+        required: false
+        takes_value: true
+        display_order: 2
+    - fields:
+        short: f
+        long: fields
+        help: ""
+        required: false
+        takes_value: true
+        use_delimiter: true
+        display_order: 3
+    - table:
+        short: t
+        long: table
+        help: "Table format: tabulate selected fields for each record as processed."
+        required: false
+        takes_value: false
+        display_order: 2
+    - csv:
+        short: c
+        long: csv
+        help: "CSV format: comma delimited output of selected fields for each record as processed."
+        required: false
+        takes_value: false
+        display_order: 3
+    - summary:
+        short: s
+        long: summary
+        help: "Summary format: output summary statistics for each unique value of ligand ID."
+        required: false
+        takes_value: false
+        display_order: 4
+    - list:
+        short: l
+        long: list
+        help: "List format: output all data fields for each record."
+        takes_value: false
+        display_order: 1
+    - norm:
+        short: n
+        long: norm
+        help: "Use normalised score field names as default columns in -t and -c formats (normalised = score / #ligand heavy atoms)."
+        required: false
+        takes_value: false
+        display_order: 5
+    - old:
+        short: o
+        long: old
+        help: "Use old (v3.00) score field names as default columns in -t and -c formats, else use v4.00 field names."
+        required: false
+        takes_value: false
+        display_order: 6
+    - no_headers:
+        long: no-head
+        help: "Don't output column headings in -t and -c formats."
+        required: false
+        takes_value: false
+        display_order: 7
+    #- supplier:
+    #    short: S
+    #    long: supplier
+    #    help: "List format: output all data fields for each record"
+    #    required: false
+    #    takes_value: false

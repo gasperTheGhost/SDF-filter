@@ -331,6 +331,13 @@ pub mod sdfrecord {
                 self.lines.push("".to_owned());
             }
         }
+
+        pub fn getData(&self, key: &str) -> String {
+            return match self.data.contains_key(key) {
+                true => self.data[key].join(";"),
+                false => "".to_owned()
+            }
+        }
     }
 
 }
