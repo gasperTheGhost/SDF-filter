@@ -5,6 +5,7 @@ authors = ["gasperTheGhost <gasperTheGhost@users.noreply.github.com>"]
 edition = "2018"
 
 [lib]
+crate-type = ["dylib", "rlib"]
 name = "sdf"
 path = "src/lib.rs"
 
