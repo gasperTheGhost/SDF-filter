@@ -86,9 +86,9 @@ fn output_list(file: Vec<Vec<String>>) {
     for block in file {
         let mut record = SDFRecord::new();
         record.readRec(block);
-        writeln!(io::stdout(), "RECORD #{}", i);
+        writeln!(io::stdout(), "RECORD #{}", i).expect("Error writing to stdout");
         record.writeData();
-        writeln!(io::stdout(), "");
+        writeln!(io::stdout(), "").expect("Error writing to stdout");
         i = i + 1;
     }
 }
@@ -126,7 +126,7 @@ fn output_table(table: Table) {
 }
 
 fn output_csv(table: Table) {
-    writeln!(io::stdout(), "{}", String::from_utf8(table.to_csv(Vec::new()).unwrap().into_inner().unwrap()).unwrap());
+    writeln!(io::stdout(), "{}", String::from_utf8(table.to_csv(Vec::new()).unwrap().into_inner().unwrap()).unwrap()).expect("Error writing to stdout");
 }
 
 fn output_summary(file: Vec<Vec<String>>, idfield: &str, ind_type: &str, use_headers: bool, headings: Vec<&str>, table_fields: Vec<&str>) {
@@ -145,8 +145,8 @@ fn output_summary(file: Vec<Vec<String>>, idfield: &str, ind_type: &str, use_hea
         }
     }
 
-    writeln!(io::stdout(), "\n===============================================================");
-    writeln!(io::stdout(), "\nSUMMARY BY {}\n", idfield);
+    writeln!(io::stdout(), "\n===============================================================").expect("Error writing to stdout");
+    writeln!(io::stdout(), "\nSUMMARY BY {}\n", idfield).expect("Error writing to stdout");
 
     let mut i = 1;
     for (id, records) in records_by_id {
@@ -172,39 +172,39 @@ fn output_summary(file: Vec<Vec<String>>, idfield: &str, ind_type: &str, use_hea
             }
         }
         
-        writeln!(io::stdout(), "===============================================================");
-        writeln!(io::stdout(), "{} = {} (#{})\n", idfield, id, i);
+        writeln!(io::stdout(), "===============================================================").expect("Error writing to stdout");
+        writeln!(io::stdout(), "{} = {} (#{})\n", idfield, id, i).expect("Error writing to stdout");
         
-        writeln!(io::stdout(), "Constant fields:\n");
+        writeln!(io::stdout(), "Constant fields:\n").expect("Error writing to stdout");
         const_fields.set_format(*format::consts::FORMAT_CLEAN);
         const_fields.printstd();
-        writeln!(io::stdout(), "");
+        writeln!(io::stdout(), "").expect("Error writing to stdout");
 
-        writeln!(io::stdout(), "Variable fields:\n");
+        writeln!(io::stdout(), "Variable fields:\n").expect("Error writing to stdout");
         var_fields.set_format(*format::consts::FORMAT_CLEAN);
         var_fields.printstd();
-        writeln!(io::stdout(), "");
+        writeln!(io::stdout(), "").expect("Error writing to stdout");
 
-        writeln!(io::stdout(), "Individual records:\n");
+        writeln!(io::stdout(), "Individual records:\n").expect("Error writing to stdout");
         if ind_type == "csv,table" {
             let table = make_table(records, use_headers, idfield, headings.clone(), table_fields.clone());
             output_table(table.clone());
             output_csv(table);
-            writeln!(io::stdout(),"");
+            writeln!(io::stdout(),"").expect("Error writing to stdout");
         } else if ind_type == "csv" {
             let table = make_table(records, use_headers, idfield, headings.clone(), table_fields.clone());
             output_csv(table);
-            writeln!(io::stdout(),"");
+            writeln!(io::stdout(),"").expect("Error writing to stdout");
         } else if ind_type == "table" {
             let table = make_table(records, use_headers, idfield, headings.clone(), table_fields.clone());
             output_table(table);
-            writeln!(io::stdout(),"");
+            writeln!(io::stdout(),"").expect("Error writing to stdout");
         } else {
             for record in records {
                 for (key, val) in record {    
-                    writeln!(io::stdout(),"${} eq {}", key, val.join(";"));
+                    writeln!(io::stdout(),"${} eq {}", key, val.join(";")).expect("Error writing to stdout");
                 }
-                writeln!(io::stdout(), "");
+                writeln!(io::stdout(), "").expect("Error writing to stdout");
             }
         }
 
@@ -222,9 +222,23 @@ fn find_extremes(values: Vec<String>) -> (String, String) {
         }
     }
     if is_num {
-        nums.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        return (nums[0].to_string(), nums.last().unwrap().to_string());
+        return (nums.iter().cloned().float_min().to_string(), nums.iter().cloned().float_max().to_string());
     } else {
         return (values.iter().min().unwrap().to_string(), values.iter().max().unwrap().to_string());
+    }
+}
+
+trait FloatIterExt {
+    fn float_min(&mut self) -> f64;
+    fn float_max(&mut self) -> f64;
+}
+
+impl<T> FloatIterExt for T where T: Iterator<Item=f64> {
+    fn float_max(&mut self) -> f64 {
+        self.fold(f64::NAN, f64::max)
+    }
+    
+    fn float_min(&mut self) -> f64 {
+        self.fold(f64::NAN, f64::min)
     }
 }
