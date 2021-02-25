@@ -1,0 +1,37 @@
+name: sdseparate
+version: "0.1.0"
+author: Gašper Tomšič <gasper.tomsic@covid.si>
+about: Separates file by id field.
+args:
+    - input:
+        short: i
+        long: input
+        value_name: INPUT
+        help: Sets input file. - reads from stdin.
+        required: true
+        takes_value: true
+        display_order: 1
+    - output:
+        short: o
+        long: output
+        value_name: OUTPUT
+        help: Sets output directory.
+        required: false
+        default_value: .
+        takes_value: true
+        display_order: 2
+    - idfield:
+        short: f
+        long: field
+        value_name: FIELD
+        help: Specifies id field.
+        required: false
+        default_value: _TITLE1
+        takes_value: true
+        display_order: 3
+    - zipped:
+        short: z
+        long: zip
+        help: Input file is a zip container (currently only supports zips with a single file)
+        takes_value: false
+    
