@@ -22,7 +22,7 @@ args:
     - fields:
         short: f
         long: fields
-        help: ""
+        help: "Fields to include in report (idfield is always included)"
         required: false
         takes_value: true
         use_delimiter: true
