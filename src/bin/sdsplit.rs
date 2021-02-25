@@ -9,19 +9,20 @@ fn main(){
     let input = matches.value_of("input").unwrap();
     let output = matches.value_of("output").unwrap();
     let name = matches.value_of("name").unwrap();
+    let zipped = matches.is_present("zipped");
 
     // Check if package should be split by number of files or number of records
     match matches.is_present("number_of_files") {
-        true => split_package_num(&input, matches.value_of("number_of_files").unwrap().parse::<usize>().unwrap(), output, name),
-        false => split_package_size(&input, matches.value_of("size_of_files").unwrap().parse::<usize>().unwrap(), output, name)
+        true => split_package_num(&input, matches.value_of("number_of_files").unwrap().parse::<usize>().unwrap(), output, name, zipped),
+        false => split_package_size(&input, matches.value_of("size_of_files").unwrap().parse::<usize>().unwrap(), output, name, zipped)
     }
 }
 
-fn split_package_num(package: &str, threads: usize, outputdir: &str, filename: &str) {
+fn split_package_num(package: &str, threads: usize, outputdir: &str, filename: &str, zipped: bool) {
     let separator = "\n$$$$";
 
     // Save file contents to string
-    let contents = sdf::read_to_string(package);
+    let contents = sdf::read_to_string(package, zipped);
     // Split file into vector of SDRecords (as strings)
     let mut content_iterator: Vec<&str> = contents.split("\n$$$$").collect();
     content_iterator.pop(); // Remove last (empty) vector item
@@ -58,11 +59,11 @@ fn split_package_num(package: &str, threads: usize, outputdir: &str, filename: &
     }
 }
 
-fn split_package_size(package: &str, size: usize, outputdir: &str, filename: &str) {
+fn split_package_size(package: &str, size: usize, outputdir: &str, filename: &str, zipped: bool) {
     let separator = "\n$$$$";
 
     // Save file contents to string
-    let contents = sdf::read_to_string(package);
+    let contents = sdf::read_to_string(package, zipped);
     // Split file into vector of SDRecords (as strings)
     let mut content_iterator: Vec<&str> = contents.split("\n$$$$").collect();
     content_iterator.pop(); // Remove last (empty) vector item

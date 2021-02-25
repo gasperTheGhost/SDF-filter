@@ -15,6 +15,7 @@ fn main() -> io::Result<()>{
     let yaml = load_yaml!("help/sddistill.yml");
     let matches = App::from_yaml(yaml).get_matches();
     let filetypes: Vec<&str> = vec!["test"]; //matches.values_of("filetypes").unwrap().collect();
+    let zipped = matches.is_present("zipped");
 
     // Iterate over input files 
     let files: Vec<String>;
@@ -38,7 +39,7 @@ fn main() -> io::Result<()>{
         println!("Processing files...");
         let _iter: Vec<_> = files.par_iter().progress_with(pb).map(|file| { // Use par_iter() for easy parallelization
             // Read file contents to string
-            let contents = sdf::read_to_string(&file);
+            let contents = sdf::read_to_string(&file, zipped);
 
             // Split contents to vector of SDRecords (as strings)
             let mut contentVec: Vec<&str> = contents.split("$$$$").collect();

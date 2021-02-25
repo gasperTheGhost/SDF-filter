@@ -1,5 +1,4 @@
 use std::{
-    cmp::Ordering,
     collections::BTreeMap,
     io::{self, Write}};
 use clap::{load_yaml, App};
@@ -13,7 +12,7 @@ fn main() {
     let matches = App::from_yaml(yaml).get_matches();
 
     let input = matches.value_of("input").expect("No input value");
-    let contents = sdf::prepare_file_for_SDF(input);
+    let contents = sdf::prepare_file_for_SDF(input, matches.is_present("zipped"));
 
     if !matches.is_present("table") && !matches.is_present("csv") && !matches.is_present("summary") {
         output_list(contents);

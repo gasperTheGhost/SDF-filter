@@ -16,6 +16,7 @@ fn main() {
         true => matches.value_of("input").unwrap(),
         false => "-"
     };
+    let zipped = matches.is_present("zipped");
 
     // Check if file should be read destructively
     if matches.is_present("bytes") {
@@ -60,7 +61,7 @@ fn main() {
         };
 
         // Read lines from file as vector of lines (as strings)
-        let file = sdf::lines_from_file(input);
+        let file = sdf::lines_from_file(input, zipped);
 
         // Write to file or stdout
         if matches.is_present("output") {

@@ -2,10 +2,39 @@
 
 use std::{
     fs::{self, File, OpenOptions},
-    io::{self, prelude::*, BufReader},
+    io::{self, prelude::*, BufReader, Read, Seek, SeekFrom},
     path::Path,
 };
 use walkdir::WalkDir;
+use zip::read::ZipArchive;
+
+enum Input {
+    File(fs::File),
+    Stdin(io::Stdin),
+}
+
+impl Read for Input {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        match *self {
+            Input::File(ref mut file) => file.read(buf),
+            Input::Stdin(ref mut stdin) => stdin.read(buf),
+        }
+    }
+}
+
+impl Seek for Input {
+    fn seek(&mut self, pos: SeekFrom) -> io::Result<u64> {
+        match *self {
+            Input::File(ref mut file) => file.seek(pos),
+            Input::Stdin(_) => {
+                Err(io::Error::new(
+                    io::ErrorKind::Other, 
+                    "Not supported by stdin-input",
+                ))
+            },
+        }
+    }
+}
 
 pub fn getFiles(path: &str, _filetypes: Vec<&str>, recursive: bool) -> Vec<String> {
     println!("Making list of files in directory...");
@@ -47,13 +76,35 @@ pub fn append_line_to_file(filename: &str, line: &str) {
     }
 }
 
-pub fn lines_from_file(filename: &str) -> Vec<String> {
-    let mut reader: Box<dyn BufRead> = match filename {
-        "-" => Box::new(BufReader::new(io::stdin())),
-        _ => Box::new(BufReader::new(fs::File::open(Path::new(filename)).expect("No such file")))
+fn zip_handler(input: Input) -> Result<Vec<u8>, io::Error> {
+    let mut buf: Vec<u8> = Vec::new();
+    let mut archive = ZipArchive::new(input).unwrap();
+        if archive.len() == 1 {
+            archive.by_index(0).unwrap().read_to_end(&mut buf)?;
+            return Ok(buf);
+        } else {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "Zip file contains more than one file"));
+        }
+}
+
+pub fn lines_from_file(filename: &str, zipped: bool) -> Vec<String> {
+    let input: Input = match filename {
+        "-" => Input::Stdin(io::stdin()),
+        _ => Input::File(fs::File::open(Path::new(filename)).expect("No such file"))
     };
     let mut buf: Vec<u8> = Vec::new();
     let mut output: Vec<String> = Vec::new();
+    let mut reader: Box<dyn BufRead>;
+    if zipped {
+        match zip_handler(input) {
+            Ok(contents) => {
+                reader = Box::new(io::Cursor::new(contents));
+            },
+            Err(e) => return vec![e.to_string()]
+        }
+    } else {
+        reader = Box::new(BufReader::new(input));
+    }
     while let Ok(_) = reader.read_until(b'\n', &mut buf) {
         if buf.is_empty() {
             break;
@@ -69,15 +120,25 @@ pub fn lines_from_file(filename: &str) -> Vec<String> {
     return output;
 }
 
-pub fn read_to_string(filename: &str) -> String {
-    let mut reader: Box<dyn BufRead> = match filename {
-        "-" => Box::new(BufReader::new(io::stdin())),
-        _ => Box::new(BufReader::new(fs::File::open(Path::new(filename)).expect("No such file")))
+pub fn read_to_string(filename: &str, zipped: bool) -> String {
+    let mut input: Input = match filename {
+        "-" => Input::Stdin(io::stdin()),
+        _ => Input::File(fs::File::open(Path::new(filename)).expect("No such file"))
     };
     let mut buf: Vec<u8> = Vec::new();
-    reader.read_to_end(&mut buf).expect("Cannot read file");
-    let buf = String::from_utf8_lossy(&buf);
-    return buf.into_owned();
+    if zipped {
+        match zip_handler(input) {
+            Ok(content) => {
+                let buf = String::from_utf8_lossy(&content);
+                return buf.into_owned();
+            },
+            Err(_) => return "{Error zip contains more than one file}".to_string()
+        }
+    } else {
+        input.read_to_end(&mut buf).expect("Cannot read file");
+        let buf = String::from_utf8_lossy(&buf);
+        return buf.into_owned();
+    }
 }
 
 pub fn write_to_file(content: &str, filename: &str) {
@@ -118,9 +179,9 @@ pub fn write_bytes_to_file(content: Vec<u8>, filename: &str) {
     }
 }
 
-pub fn prepare_file_for_SDF(file: &str) -> Vec<Vec<String>>{
+pub fn prepare_file_for_SDF(file: &str, zipped: bool) -> Vec<Vec<String>>{
     // Read file contents to string
-    let contents = read_to_string(file);
+    let contents = read_to_string(file, zipped);
     let mut contents_vec: Vec<&str> = contents.split("\n$$$$").collect();
     contents_vec.pop();
     

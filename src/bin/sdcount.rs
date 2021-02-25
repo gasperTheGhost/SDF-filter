@@ -13,7 +13,7 @@ fn main() {
     };
 
     // Read input file to string
-    let file = sdf::read_to_string(input);
+    let file = sdf::read_to_string(input, matches.is_present("zipped"));
     // Print number of SDRecords in string
     println!("{}", file.matches("$$$$").count().to_string())
 
