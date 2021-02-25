@@ -1,0 +1,59 @@
+name: sdsort
+version: "0.1.0"
+author: Gašper Tomšič <gasper.tomsic@covid.si>
+about: Sorts SD records by given data field.
+args:
+    - input:
+        short: i
+        long: input
+        value_name: INPUT
+        help: Sets input file. - reads from stdin.
+        required: true
+        takes_value: true
+        display_order: 1
+    - output:
+        short: o
+        long: output
+        value_name: OUTPUT
+        help: Sets output directory. - writes to stdout.
+        required: false
+        default_value: "-"
+        takes_value: true
+        display_order: 2
+    - sort_field:
+        short: f
+        long: field
+        value_name: SORT FIELD
+        help: Specifies sort field.
+        required: false
+        default_value: SCORE
+        takes_value: true
+        display_order: 3
+    - group:
+        short: g
+        long: group
+        value_name: ID FIELD
+        help: Sort results by group. Group by specified data field.
+        required: false
+        default_value: _TITLE1
+        takes_value: true
+        display_order: 4
+    - numeric_sort:
+        short: n
+        long: num
+        help: Numeric sort (default is text sort).
+        takes_value: false
+        display_order: 1
+    - reverse:
+        short: r
+        long: reverse
+        help: Descending sort (default is ascending sort).
+        takes_value: false
+        display_order: 2
+    - zipped:
+        short: z
+        long: zip
+        help: Input file is a zip container (currently only supports zips with a single file).
+        takes_value: false
+        display_order: 3
+    
