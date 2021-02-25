@@ -227,6 +227,16 @@ pub mod sdfrecord {
         pub dataref: BTreeMap<String, usize>, // Should maye be replaced by HashMap
     }
 
+    impl Clone for SDFRecord {
+        fn clone(&self) -> SDFRecord {
+            let mut clone = SDFRecord::new();
+            clone.lines = self.lines.clone();
+            clone.data = self.data.clone();
+            clone.dataref = self.dataref.clone();
+            return clone;
+        }
+    }
+
     impl SDFRecord {
         /*
          Constructor
@@ -363,6 +373,14 @@ pub mod sdfrecord {
             return clone;
         }
         
+        pub fn clone(&self) -> SDFRecord {
+            let mut clone = SDFRecord::new();
+            clone.lines = self.lines.clone();
+            clone.data = self.data.clone();
+            clone.dataref = self.dataref.clone();
+            return clone;
+        }
+
         /*
          addData() - adds data to data hash array,
          and adds corresponding lines also so that record may be
