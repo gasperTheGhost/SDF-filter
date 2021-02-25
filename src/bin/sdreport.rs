@@ -4,6 +4,7 @@ use std::{
 use clap::{load_yaml, App};
 use prettytable::{format, Table, Row, Cell};
 use sdf::sdfrecord::SDFRecord;
+use ordered_float::OrderedFloat;
 
 fn main() {
     
@@ -13,19 +14,13 @@ fn main() {
 
     let input = matches.value_of("input").expect("No input value");
     let contents = sdf::prepare_file_for_SDF(input, matches.is_present("zipped"));
+    let idfield = String::from(matches.value_of("idfield").unwrap());
 
     if !matches.is_present("table") && !matches.is_present("csv") && !matches.is_present("summary") {
         output_list(contents);
         std::process::exit(0x0100);
     }
 
-    let idfield: String;
-    if matches.is_present("idfield") {
-        idfield = String::from(matches.value_of("idfield").unwrap());
-    } else {
-        idfield = String::from("_TITLE1");
-    }
-    
     let headings: Vec<&str>;
     let fields: Vec<&str>;
     if matches.is_present("fields") {
@@ -214,31 +209,16 @@ fn output_summary(file: Vec<Vec<String>>, idfield: &str, ind_type: &str, use_hea
 
 fn find_extremes(values: Vec<String>) -> (String, String) {
     let mut is_num = true;
-    let mut nums: Vec<f64> = vec![];
+    let mut nums: Vec<OrderedFloat<f64>> = vec![];
     for val in &values {
         match val.parse::<f64>() {
-            Ok(num) => nums.push(num),
+            Ok(num) => nums.push(OrderedFloat(num)),
             Err(_) => {is_num = false; break}
         }
     }
     if is_num {
-        return (nums.iter().cloned().float_min().to_string(), nums.iter().cloned().float_max().to_string());
+        return (nums.iter().min().unwrap().to_string(), nums.iter().max().unwrap().to_string());
     } else {
         return (values.iter().min().unwrap().to_string(), values.iter().max().unwrap().to_string());
-    }
-}
-
-trait FloatIterExt {
-    fn float_min(&mut self) -> f64;
-    fn float_max(&mut self) -> f64;
-}
-
-impl<T> FloatIterExt for T where T: Iterator<Item=f64> {
-    fn float_max(&mut self) -> f64 {
-        self.fold(f64::NAN, f64::max)
-    }
-    
-    fn float_min(&mut self) -> f64 {
-        self.fold(f64::NAN, f64::min)
     }
 }

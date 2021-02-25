@@ -17,6 +17,7 @@ args:
         help: "Data field to use as ligand ID."
         required: false
         takes_value: true
+        default_value: _TITLE1
         display_order: 2
     - fields:
         short: f
