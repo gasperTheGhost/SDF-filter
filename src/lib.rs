@@ -36,6 +36,28 @@ impl Seek for Input {
     }
 }
 
+pub fn count_records<R: BufRead>(file: &mut R) -> usize {
+    let mut buf: Vec<u8> = Vec::new();
+    let mut count = 0;
+    loop {
+        match file.read_until(b'\n', &mut buf) {
+            Ok(_) => {
+                if buf.is_empty() {
+                    break;
+                }
+                &buf.pop();
+                if buf.last().unwrap() == &b'\r' {
+                    &buf.pop();
+                }
+                let line = String::from_utf8_lossy(&buf);
+                if line.contains("$$$$") { count = count+1 }
+                buf.clear();
+            }
+            Err(e) => eprintln!("{}", e)
+        };
+    }
+    return count;
+}
 pub fn getFiles(path: &str, _filetypes: Vec<&str>, recursive: bool) -> Vec<String> {
     println!("Making list of files in directory...");
     
