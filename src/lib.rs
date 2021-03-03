@@ -58,6 +58,33 @@ pub fn count_records<R: BufRead>(file: &mut R) -> usize {
     }
     return count;
 }
+
+pub fn record_to_string<R: BufRead>(file: &mut R) -> Option<String> {
+    let mut output: String = String::new();
+    let mut buf: Vec<u8> = Vec::new();
+    loop {
+        match file.read_until(b'\n', &mut buf) {
+            Ok(_) => {
+                if buf.is_empty() {
+                    return Option::None;
+                }
+                &buf.pop();
+                if buf.last().unwrap() == &b'\r' {
+                    &buf.pop();
+                }
+                let line = String::from_utf8_lossy(&buf);
+                if line.contains("$$$$") {
+                    return Option::Some(output);
+                } else {
+                    output = output + "\n" + &line.to_string();
+                }
+                buf.clear();
+            }
+            Err(e) => eprintln!("{}", e)
+        };
+    }
+}
+
 pub fn getFiles(path: &str, _filetypes: Vec<&str>, recursive: bool) -> Vec<String> {
     println!("Making list of files in directory...");
     
@@ -161,6 +188,22 @@ pub fn read_to_string(filename: &str, zipped: bool) -> String {
         let buf = String::from_utf8_lossy(&buf);
         return buf.into_owned();
     }
+}
+
+pub fn create_file(filename: &str) -> File {
+    let path = Path::new(&filename);
+    if filename.contains("/") {
+        let prefix = path.parent().unwrap();
+        fs::create_dir_all(prefix).unwrap();
+    }
+    let display = path.display();
+
+    let file = match fs::File::create(&path) {
+        Err(why) => panic!("Couldn't create {}: {}", display, why),
+        Ok(file) => file,
+    };
+
+    return file;
 }
 
 pub fn write_to_file(content: &str, filename: &str) {
@@ -278,7 +321,7 @@ pub mod sdfrecord {
          Return:
             Vec<String> containing all lines after record separator
         */
-        pub fn readRec(&mut self, file: Vec<String>) -> Vec<String> {
+        pub fn readRec(&mut self, file: Vec<String>) {
             // Clear old values
             self.lines.clear();
             self.data.clear();
@@ -345,8 +388,6 @@ pub mod sdfrecord {
                 println!("({},{})",key,val);
             }
             */
-
-            return vector;
         }
 
         /*
