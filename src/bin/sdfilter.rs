@@ -39,11 +39,19 @@ fn main() {
                 for block in sdf::prepare_file_for_SDF(&file, zipped) {
                     let mut record: SDFRecord = SDFRecord::new();
                     record.readRec(block);
-                    let value: f64 = record.data[field][0].parse().unwrap();
+                    let value = match record.getData(field).parse::<f64>() {
+                        Ok(num) => Some(num),
+                        Err(_) => None
+                    };
 
                     // Get matching records
-                    if evaluate(value, refvalue, operand) {
-                        matching_records.push(record.lines.join("\n"));
+                    match evaluate(value, refvalue, operand) {
+                        Some(result) => {
+                            if result {
+                                matching_records.push(record.lines.join("\n"));
+                            }
+                        },
+                        None => ()
                     }
                 }
 
@@ -66,11 +74,19 @@ fn main() {
                 for block in sdf::prepare_file_for_SDF(&file, zipped) {
                     let mut record: SDFRecord = SDFRecord::new();
                     record.readRec(block);
-                    let value: f64 = record.data[field][0].parse().unwrap();
+                    let value = match record.getData(field).parse::<f64>() {
+                        Ok(num) => Some(num),
+                        Err(_) => None
+                    };
 
                     // Get matching records
-                    if evaluate(value, refvalue, operand) {
-                        matching_records.push(record.lines.join("\n"));
+                    match evaluate(value, refvalue, operand) {
+                        Some(result) => {
+                            if result {
+                                matching_records.push(record.lines.join("\n"));
+                            }
+                        },
+                        None => ()
                     }
                 }
 
@@ -92,41 +108,46 @@ fn main() {
     }
 }
 
-fn evaluate(value: f64, refvalue: f64, operand: &str) -> bool {
-    match operand {
-        "lt" => {
-            if value < refvalue {
-                return true;
-            } else {return false}
-        },
-        "le" => {
-            if value <= refvalue {
-                return true;
-            } else {return false}
-        },
-        "eq" => {
-            if value == refvalue {
-                return true;
-            } else {return false}
-        },
-        "ne" => {
-            if value != refvalue {
-                return true;
-            } else {return false}
-        },
-        "ge" => {
-            if value >= refvalue {
-                return true;
-            } else {return false}
-        },
-        "gt" => {
-            if value > refvalue {
-                return true;
-            } else {return false}
-        },
-        _ => {
-            eprintln!("Unsupported operand!");
-            return false;
+fn evaluate(value: Option<f64>, refvalue: f64, operand: &str) -> Option<bool> {
+    match value {
+        None => return None,
+        Some(value) => {
+            match operand {
+                "lt" => {
+                    if value < refvalue {
+                        return Some(true);
+                    } else {return Some(false)}
+                },
+                "le" => {
+                    if value <= refvalue {
+                        return Some(true);
+                    } else {return Some(false)}
+                },
+                "eq" => {
+                    if value == refvalue {
+                        return Some(true);
+                    } else {return Some(false)}
+                },
+                "ne" => {
+                    if value != refvalue {
+                        return Some(true);
+                    } else {return Some(false)}
+                },
+                "ge" => {
+                    if value >= refvalue {
+                        return Some(true);
+                    } else {return Some(false)}
+                },
+                "gt" => {
+                    if value > refvalue {
+                        return Some(true);
+                    } else {return Some(false)}
+                },
+                _ => {
+                    eprintln!("Unsupported operand!");
+                    return Some(false);
+                }
+            }
         }
     }
 }

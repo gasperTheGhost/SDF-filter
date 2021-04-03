@@ -351,9 +351,11 @@ pub mod sdfrecord {
                             self.data.insert("_NDIM".to_string(),vec!(ndim));
                         }
                     } else if lineNum == 4 { // Include number of atoms as pseudo data field
-                        let temp: Vec<&str> = line.split(" ").collect();
-                        if temp.len() > 0 {
-                            self.data.insert("_NATOMS".to_string(), vec!(temp[1].to_owned()));
+                        let temp: Vec<char> = line.chars().collect();
+                        if temp.len() == 39 && (temp[34..] == ['V','2','0','0','0'] || temp[34..] == ['V','3','0','0','0']) {
+                            self.data.insert("_NATOMS".to_string(), vec!(temp[..2].iter().collect::<String>().trim().to_string()));
+                        } else {
+                            self.data.insert("_NATOMS".to_string(), vec!("ERR".to_string()));
                         }
                     }
 
