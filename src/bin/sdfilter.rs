@@ -1,5 +1,5 @@
 use std::{
-    io::{self, Write},
+    io::{self, prelude::*, BufWriter, BufReader},
     fs::metadata,
     process,
     time::Instant
@@ -31,13 +31,23 @@ fn main() {
         } else { // Check if path points to a file
             files = vec![(&path).to_string()];
         }
-
         if output == "-" {
             for file in files { // Use par_iter() for easy parallelization
-                let mut matching_records: Vec<String> = Vec::new();
-                for block in sdf::prepare_file_for_SDF(&file) {
+                // Create write buffer
+                let mut writer = Box::new(BufWriter::new(io::stdout()));
+                let mut reader = BufReader::new(std::fs::File::open(&file).unwrap());
+                let mut i = 1;
+                loop {
+                    let block = match sdf::record_to_lines(&mut reader) {
+                        Some(block) => block,
+                        None => break
+                    };
+
                     let mut record: SDFRecord = SDFRecord::new();
                     record.readRec(block);
+                    if record.getData("_NATOMS") == "ERR" {
+                        eprintln!("Invalid count line in {}[{}]", &file, i.to_string());
+                    }
                     let value = match record.getData(field).parse::<f64>() {
                         Ok(num) => Some(num),
                         Err(_) => None
@@ -47,15 +57,14 @@ fn main() {
                     match evaluate(value, refvalue, operand) {
                         Some(result) => {
                             if result {
-                                matching_records.push(record.lines.join("\n"));
+                                writeln!(writer, "{}\n$$$$", record.lines.join("\n")).expect("Failed to write to buffer!");
+                                writer.flush().unwrap();
                             }
                         },
                         None => ()
                     }
+                    i = i + 1;
                 }
-
-                // Write vector of extracted data to stdout
-                io::stdout().write_all((matching_records.join("\n$$$$\n")+"\n$$$$").trim().as_bytes()).expect("Error writing to stdout");
             }
         } else {
             // Draw a nice progress bar
@@ -69,10 +78,29 @@ fn main() {
             println!("Processing files...");
 
             let _iter: Vec<_> = files.par_iter().progress_with(pb).map(|file| { // Use par_iter() for easy parallelization
-                let mut matching_records: Vec<String> = Vec::new();
-                for block in sdf::prepare_file_for_SDF(&file) {
+                // Set output path
+                let out_path: String = match file.trim() {
+                    "-" => (output.to_owned() + "/stdin.txt"),
+                    _ => (output.to_owned() + "/" + (&file.split("/").collect::<Vec<&str>>()).last().unwrap()),
+                };
+
+                // Create write buffer
+                let out_file = sdf::create_file(&out_path);
+                let mut writer = Box::new(BufWriter::new(out_file));
+                
+                let mut reader = BufReader::new(std::fs::File::open(&file).unwrap());
+                let mut i = 1;
+                loop {
+                    let block = match sdf::record_to_lines(&mut reader) {
+                        Some(block) => block,
+                        None => break
+                    };
+
                     let mut record: SDFRecord = SDFRecord::new();
                     record.readRec(block);
+                    if record.getData("_NATOMS") == "ERR" {
+                        eprintln!("Invalid count line in {}[{}]", &file, i.to_string());
+                    }
                     let value = match record.getData(field).parse::<f64>() {
                         Ok(num) => Some(num),
                         Err(_) => None
@@ -82,20 +110,14 @@ fn main() {
                     match evaluate(value, refvalue, operand) {
                         Some(result) => {
                             if result {
-                                matching_records.push(record.lines.join("\n"));
+                                writeln!(writer, "{}\n$$$$", record.lines.join("\n")).expect("Failed to write to buffer!");
+                                writer.flush().unwrap();
                             }
                         },
                         None => ()
                     }
+                    i = i + 1;
                 }
-
-                // Set output path
-                let out_path: String = match file.trim() {
-                    "-" => (output.to_owned() + "/stdin.txt"),
-                    _ => (output.to_owned() + "/" + (&file.split("/").collect::<Vec<&str>>()).last().unwrap()),
-                };
-                // Write vector of extracted data to file
-                sdf::write_to_file(&((matching_records.join("\n$$$$\n")+"\n$$$$").trim()), &out_path);
             }).collect();
 
             println!("Done in {}", HumanDuration(started.elapsed()));

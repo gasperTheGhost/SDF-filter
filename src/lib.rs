@@ -68,7 +68,7 @@ pub fn record_to_string<R: BufRead>(file: &mut R) -> Option<String> {
                     return Option::None;
                 }
                 &buf.pop();
-                if buf.last().unwrap() == &b'\r' {
+                if buf.last() == Some(&b'\r') {
                     &buf.pop();
                 }
                 let line = String::from_utf8_lossy(&buf);
@@ -76,6 +76,31 @@ pub fn record_to_string<R: BufRead>(file: &mut R) -> Option<String> {
                     return Option::Some(output);
                 } else {
                     output = output + "\n" + &line.to_string();
+                }
+                buf.clear();
+            }
+            Err(e) => eprintln!("{}", e)
+        };
+    }
+}
+
+pub fn record_to_lines<R: BufRead>(file: &mut R) -> Option<Vec<String>> {
+    let mut output: Vec<String> = Vec::new();
+    let mut buf: Vec<u8> = Vec::new();
+    loop {
+        match file.read_until(b'\n', &mut buf) {
+            Ok(_) => {
+                if buf.is_empty() {
+                    return Option::None;
+                }
+                &buf.pop();
+                if buf.last() == Some(&b'\r') {
+                    &buf.pop();
+                }
+                let line = String::from_utf8_lossy(&buf);
+                output.push(line.to_string());
+                if line.contains("$$$$") {
+                    return Option::Some(output);
                 }
                 buf.clear();
             }
@@ -255,6 +280,7 @@ pub mod sdfrecord {
                       while value stores the line number, where it's located
 */
 
+    #[derive(Clone)]
     pub struct SDFRecord {
         pub lines: Vec<String>,
         pub data: BTreeMap<String, Vec<String>>, // Should maybe be replaced by HashMap
@@ -344,21 +370,6 @@ pub mod sdfrecord {
                     }
                 }
             }
-
-            /*
-            println!("\nLine Vector");
-            for line in &self.lines {
-                println!("{}", line);
-            }
-            println!("\nData HashMap");
-            for (key, val) in &self.data {
-                println!("({},{:?})",key,val);
-            }
-            println!("\nDataref HashMap");
-            for (key,val) in &self.dataref {
-                println!("({},{})",key,val);
-            }
-            */
         }
 
         /*
@@ -400,14 +411,6 @@ pub mod sdfrecord {
          copy() - create deep copy of SDRecord
         */
         pub fn copy(&self) -> SDFRecord {
-            let mut clone = SDFRecord::new();
-            clone.lines = self.lines.clone();
-            clone.data = self.data.clone();
-            clone.dataref = self.dataref.clone();
-            return clone;
-        }
-        
-        pub fn clone(&self) -> SDFRecord {
             let mut clone = SDFRecord::new();
             clone.lines = self.lines.clone();
             clone.data = self.data.clone();
