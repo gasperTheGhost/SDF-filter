@@ -20,7 +20,6 @@ fn main() {
     let refvalue: f64 = matches.value_of("value").unwrap().parse().expect("Value is not valid float!");
     let operand = matches.value_of("operand").unwrap();
     let filetypes: Vec<&str> = vec!["test"]; //matches.values_of("filetypes").unwrap().collect();
-    let zipped = matches.is_present("zipped");
     
     // Iterate over input files 
     let files: Vec<String>;
@@ -36,7 +35,7 @@ fn main() {
         if output == "-" {
             for file in files { // Use par_iter() for easy parallelization
                 let mut matching_records: Vec<String> = Vec::new();
-                for block in sdf::prepare_file_for_SDF(&file, zipped) {
+                for block in sdf::prepare_file_for_SDF(&file) {
                     let mut record: SDFRecord = SDFRecord::new();
                     record.readRec(block);
                     let value = match record.getData(field).parse::<f64>() {
@@ -71,7 +70,7 @@ fn main() {
 
             let _iter: Vec<_> = files.par_iter().progress_with(pb).map(|file| { // Use par_iter() for easy parallelization
                 let mut matching_records: Vec<String> = Vec::new();
-                for block in sdf::prepare_file_for_SDF(&file, zipped) {
+                for block in sdf::prepare_file_for_SDF(&file) {
                     let mut record: SDFRecord = SDFRecord::new();
                     record.readRec(block);
                     let value = match record.getData(field).parse::<f64>() {

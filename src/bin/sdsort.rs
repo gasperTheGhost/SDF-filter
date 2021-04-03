@@ -11,12 +11,11 @@ fn main() {
 
     let input = matches.value_of("input").unwrap();
     let output = matches.value_of("output").unwrap();
-    let zipped = matches.is_present("zipped");
     let sort_field = matches.value_of("sort_field").unwrap();
     let idfield = matches.value_of("group").unwrap();
 
     let mut records: Vec<SDFRecord> = Vec::new();
-    let file = sdf::prepare_file_for_SDF(input, zipped);
+    let file = sdf::prepare_file_for_SDF(input);
     for block in file {
         let mut record = SDFRecord::new();
         record.readRec(block);

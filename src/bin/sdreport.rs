@@ -13,7 +13,7 @@ fn main() {
     let matches = App::from_yaml(yaml).get_matches();
 
     let input = matches.value_of("input").expect("No input value");
-    let contents = sdf::prepare_file_for_SDF(input, matches.is_present("zipped"));
+    let contents = sdf::prepare_file_for_SDF(input);
     let idfield = String::from(matches.value_of("idfield").unwrap());
 
     if !matches.is_present("table") && !matches.is_present("csv") && !matches.is_present("summary") {
