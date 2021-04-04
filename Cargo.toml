@@ -18,3 +18,4 @@ indicatif = {version = ">= 0.15.0", features = ["rayon"]}
 rayon = "1.5.0"
 prettytable-rs = "0.8.0"
 ordered-float = ">= 2.0"
+fs-err = "2.5.0"
