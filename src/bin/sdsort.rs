@@ -14,13 +14,7 @@ fn main() {
     let sort_field = matches.value_of("sort_field").unwrap();
     let idfield = matches.value_of("group").unwrap();
 
-    let mut records: Vec<SDFRecord> = Vec::new();
-    let file = sdf::prepare_file_for_SDF(input);
-    for block in file {
-        let mut record = SDFRecord::new();
-        record.readRec(block);
-        records.push(record);
-    }
+    let mut records: Vec<SDFRecord> = sdf::file_to_SDF_vec(input);
 
     let mut grouped_records: HashMap<String, Vec<SDFRecord>> = HashMap::new();
     if matches.is_present("group") {
