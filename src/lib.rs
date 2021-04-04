@@ -1,15 +1,28 @@
 #![allow(non_snake_case)]
 
 use std::{
-    fs::{self, File, OpenOptions},
-    io::{self, prelude::*, BufReader, Read, Seek, SeekFrom},
+    io::{self, prelude::*, Read, Seek, SeekFrom, BufReader},
     path::Path,
 };
+use fs_err::{self as fs, File, OpenOptions};
 use walkdir::WalkDir;
 
-enum Input {
-    File(fs::File),
+pub enum Input {
+    File(File),
     Stdin(io::Stdin),
+}
+
+impl Input {
+    pub fn filename(&self) -> String {
+        let output: String;
+        match self {
+            Input::File(file) => {
+                output = file.path().file_name().expect("Cannot get file name!").to_str().unwrap().to_string()
+            },
+            Input::Stdin(_) => { output = String::from("stdin") } 
+        }
+        return output;
+    }
 }
 
 impl Read for Input {
@@ -45,7 +58,7 @@ pub fn count_records<R: BufRead>(file: &mut R) -> usize {
                     break;
                 }
                 &buf.pop();
-                if buf.last().unwrap() == &b'\r' {
+                if buf.last() == Some(&b'\r') {
                     &buf.pop();
                 }
                 let line = String::from_utf8_lossy(&buf);
@@ -149,41 +162,6 @@ pub fn append_line_to_file(filename: &str, line: &str) {
     }
 }
 
-pub fn lines_from_file(filename: &str) -> Vec<String> {
-    let input: Input = match filename {
-        "-" => Input::Stdin(io::stdin()),
-        _ => Input::File(fs::File::open(Path::new(filename)).expect("No such file"))
-    };
-    let mut buf: Vec<u8> = Vec::new();
-    let mut output: Vec<String> = Vec::new();
-    let mut reader = Box::new(BufReader::new(input));
-
-    while let Ok(_) = reader.read_until(b'\n', &mut buf) {
-        if buf.is_empty() {
-            break;
-        }
-        &buf.pop();
-        if buf.last().unwrap().to_owned() == b'\r' {
-            &buf.pop();
-        }
-        let line = String::from_utf8_lossy(&buf);
-        output.push(line.into_owned());
-        buf.clear();
-    }
-    return output;
-}
-
-pub fn read_to_string(filename: &str) -> String {
-    let mut input: Input = match filename {
-        "-" => Input::Stdin(io::stdin()),
-        _ => Input::File(fs::File::open(Path::new(filename)).expect("No such file"))
-    };
-    let mut buf: Vec<u8> = Vec::new();
-    input.read_to_end(&mut buf).expect("Cannot read file");
-    let buf = String::from_utf8_lossy(&buf);
-    return buf.into_owned();
-}
-
 pub fn create_file(filename: &str) -> File {
     let path = Path::new(&filename);
     if filename.contains("/") {
@@ -238,25 +216,35 @@ pub fn write_bytes_to_file(content: Vec<u8>, filename: &str) {
     }
 }
 
-pub fn prepare_file_for_SDF(file: &str) -> Vec<Vec<String>>{
-    // Read file contents to string
-    let contents = read_to_string(file);
-    let mut contents_vec: Vec<&str> = contents.split("\n$$$$").collect();
-    contents_vec.pop();
-    
-    // Iterate over SD Records (as strings)
-    let mut output: Vec<Vec<String>> = Vec::new();
-    let mut i = 0;
-    for block in contents_vec {
-        // Turn strings into a vector of lines
-        let mut lines: Vec<String> = (block.to_string() + "\n$$$$").split('\n').map(|a|a.replace("\r","").to_string()).collect();
-        if i == 0 {
-            i = i + 1;
-        } else {
-            lines.remove(0);
+pub fn file_to_SDF_vec(file: &str) -> Vec<sdfrecord::SDFRecord> {
+    let mut output: Vec<sdfrecord::SDFRecord> = Vec::new();
+    let input: Input = match file {
+        "-" => Input::Stdin(std::io::stdin()),
+        filename => Input::File(fs_err::File::open(std::path::Path::new(filename)).expect("No such file"))
+    };
+    let inputfilename = input.filename();
+
+    let mut reader = BufReader::new(input);
+    let mut i = 1;
+
+    loop {
+        let block = match record_to_lines(&mut reader) {
+            Some(block) => block,
+            None => break
+        };
+
+        let mut record: sdfrecord::SDFRecord = sdfrecord::SDFRecord::new();
+        record.readRec(block);
+        if record.getData("_NATOMS") == "ERR" {
+            eprintln!("Invalid count line in {}[{}]", inputfilename, i.to_string());
+            continue;
         }
-        output.push(lines);
+
+        output.push(record);
+
+        i = i + 1;
     }
+
     return output;
 }
 
@@ -285,16 +273,6 @@ pub mod sdfrecord {
         pub lines: Vec<String>,
         pub data: BTreeMap<String, Vec<String>>, // Should maybe be replaced by HashMap
         pub dataref: BTreeMap<String, usize>, // Should maye be replaced by HashMap
-    }
-
-    impl Clone for SDFRecord {
-        fn clone(&self) -> SDFRecord {
-            let mut clone = SDFRecord::new();
-            clone.lines = self.lines.clone();
-            clone.data = self.data.clone();
-            clone.dataref = self.dataref.clone();
-            return clone;
-        }
     }
 
     impl SDFRecord {
