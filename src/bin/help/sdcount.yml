@@ -1,0 +1,13 @@
+name: sdcount
+version: "0.1.0"
+author: Gašper Tomšič <gasper.tomsic@covid.si>
+about: Returns number of SDF records in file or stdin.
+args:
+    - input:
+        short: i
+        long: input
+        value_name: INPUT
+        help: "Sets input file. If missing\nreads from stdin."
+        required: false
+        takes_value: true
+        index: 1
